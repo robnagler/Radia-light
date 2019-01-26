@@ -459,63 +459,67 @@ void radTInteraction::SetupInteractMatrix()
 
 	for(int ColNo=0; ColNo<AmOfMainElem; ColNo++)
 	{
-                radTFieldKey FieldKeyInteract; FieldKeyInteract.B_=FieldKeyInteract.H_=FieldKeyInteract.PreRelax_=1;
-                TVector3d ZeroVect(0.,0.,0.);
-
-		FillInTransPtrVectForElem(ColNo, 'I');
-		radTg3dRelax* g3dRelaxPtrColNo = g3dRelaxPtrVect[ColNo];
-
-		for(int StrNo=0; StrNo<AmOfMainElem; StrNo++)
-		{
-			TVector3d InitObsPoiVect = MainTransPtrArray[StrNo]->TrPoint((g3dRelaxPtrVect[StrNo])->ReturnCentrPoint());
-
-			TMatrix3d SubMatrix(ZeroVect, ZeroVect, ZeroVect), BufSubMatrix;
-			for(unsigned i=0; i<TransPtrVect.size(); i++)
-			{
-				TVector3d ObsPoiVect = TransPtrVect[i]->TrPoint_inv(InitObsPoiVect);
-
-				radTField Field(FieldKeyInteract, CompCriterium, ObsPoiVect, ZeroVect, ZeroVect, ZeroVect, ZeroVect, 0.);
-				Field.AmOfIntrctElemWithSym = AmOfElemWithSym; // New, may be changed later
-
-				g3dRelaxPtrColNo->B_comp(&Field);
-
-				BufSubMatrix.Str0 = Field.B;
-				BufSubMatrix.Str1 = Field.H;
-				BufSubMatrix.Str2 = Field.A;
-
-                                // local op that does a matrix multiply with constant
-				TransPtrVect[i]->TrMatrix(BufSubMatrix);
-				SubMatrix += BufSubMatrix;
-			}
-                        // local op that matrix multiplies inverse with constant
-			MainTransPtrArray[StrNo]->TrMatrix_inv(SubMatrix);
-                        int b = StrNo * 9;
-			ColumnResult[b + 0] = SubMatrix.Str0.x;
-			ColumnResult[b + 1] = SubMatrix.Str0.y;
-			ColumnResult[b + 2] = SubMatrix.Str0.z;
-			ColumnResult[b + 3] = SubMatrix.Str1.x;
-			ColumnResult[b + 4] = SubMatrix.Str1.y;
-			ColumnResult[b + 5] = SubMatrix.Str1.z;
-			ColumnResult[b + 6] = SubMatrix.Str2.x;
-			ColumnResult[b + 7] = SubMatrix.Str2.y;
-			ColumnResult[b + 8] = SubMatrix.Str2.z;
-		}
-		EmptyTransPtrVect();
+                SetupInteractMatrixColumn(ColNo, AmOfMainElem, ColumnResult);
 		for(int StrNo=0; StrNo<AmOfMainElem; StrNo++)
                 {
-                        int b = StrNo * 9;
-                        InteractMatrix[StrNo][ColNo].Str0.x = ColumnResult[b + 0];
-                        InteractMatrix[StrNo][ColNo].Str0.y = ColumnResult[b + 1];
-                        InteractMatrix[StrNo][ColNo].Str0.z = ColumnResult[b + 2];
-                        InteractMatrix[StrNo][ColNo].Str1.x = ColumnResult[b + 3];
-                        InteractMatrix[StrNo][ColNo].Str1.y = ColumnResult[b + 4];
-                        InteractMatrix[StrNo][ColNo].Str1.z = ColumnResult[b + 5];
-                        InteractMatrix[StrNo][ColNo].Str2.x = ColumnResult[b + 6];
-                        InteractMatrix[StrNo][ColNo].Str2.y = ColumnResult[b + 7];
-                        InteractMatrix[StrNo][ColNo].Str2.z = ColumnResult[b + 8];
+                        double *res = &ColumnResult[StrNo * 9];
+                        InteractMatrix[StrNo][ColNo].Str0.x = *res++;
+                        InteractMatrix[StrNo][ColNo].Str0.y = *res++;
+                        InteractMatrix[StrNo][ColNo].Str0.z = *res++;
+                        InteractMatrix[StrNo][ColNo].Str1.x = *res++;
+                        InteractMatrix[StrNo][ColNo].Str1.y = *res++;
+                        InteractMatrix[StrNo][ColNo].Str1.z = *res++;
+                        InteractMatrix[StrNo][ColNo].Str2.x = *res++;
+                        InteractMatrix[StrNo][ColNo].Str2.y = *res++;
+                        InteractMatrix[StrNo][ColNo].Str2.z = *res++;
                 }
 	}
         free(ColumnResult);
+}
+
+void radTInteraction::SetupInteractMatrixColumn(int ColNo, int AmOfElemWithSym, double *res)
+{
+        radTFieldKey FieldKeyInteract; FieldKeyInteract.B_=FieldKeyInteract.H_=FieldKeyInteract.PreRelax_=1;
+        TVector3d ZeroVect(0.,0.,0.);
+
+        FillInTransPtrVectForElem(ColNo, 'I');
+        radTg3dRelax* g3dRelaxPtrColNo = g3dRelaxPtrVect[ColNo];
+
+        for(int StrNo=0; StrNo<AmOfMainElem; StrNo++)
+        {
+                TVector3d InitObsPoiVect = MainTransPtrArray[StrNo]->TrPoint((g3dRelaxPtrVect[StrNo])->ReturnCentrPoint());
+
+                TMatrix3d SubMatrix(ZeroVect, ZeroVect, ZeroVect), BufSubMatrix;
+                for(unsigned i=0; i<TransPtrVect.size(); i++)
+                {
+                        TVector3d ObsPoiVect = TransPtrVect[i]->TrPoint_inv(InitObsPoiVect);
+
+                        radTField Field(FieldKeyInteract, CompCriterium, ObsPoiVect, ZeroVect, ZeroVect, ZeroVect, ZeroVect, 0.);
+                        Field.AmOfIntrctElemWithSym = AmOfElemWithSym; // New, may be changed later
+
+                        g3dRelaxPtrColNo->B_comp(&Field);
+
+                        BufSubMatrix.Str0 = Field.B;
+                        BufSubMatrix.Str1 = Field.H;
+                        BufSubMatrix.Str2 = Field.A;
+
+                        // local op that does a matrix multiply with constant
+                        TransPtrVect[i]->TrMatrix(BufSubMatrix);
+                        SubMatrix += BufSubMatrix;
+                }
+                // local op that matrix multiplies inverse with constant
+                MainTransPtrArray[StrNo]->TrMatrix_inv(SubMatrix);
+                *res++ = SubMatrix.Str0.x;
+                *res++ = SubMatrix.Str0.y;
+                *res++ = SubMatrix.Str0.z;
+                *res++ = SubMatrix.Str1.x;
+                *res++ = SubMatrix.Str1.y;
+                *res++ = SubMatrix.Str1.z;
+                *res++ = SubMatrix.Str2.x;
+                *res++ = SubMatrix.Str2.y;
+                *res++ = SubMatrix.Str2.z;
+        }
+        EmptyTransPtrVect();
 }
 
 //-------------------------------------------------------------------------
