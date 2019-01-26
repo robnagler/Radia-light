@@ -183,7 +183,9 @@ full=rad.ObjCnt([yoke,coil])
 t0 = time.time()
 res = rad.Solve(full, 0.0001, 10000)
 #print('Solved for Magnetizations in', round(time.time() - t0, 2), 's')
-assert [9.991124106723865e-05, 1.7586937018625115, 0.009296872940670615, 744.0] == res
+expect = [9.991124106723865e-05, 1.7586937018625115, 0.009296872940670615, 744.0]
+assert expect == res, \
+    ' {} expected != actual {}'.format(expect, res)
 #print('Relaxation Results:', res)
 
 #ByVsX, MeshX, ByVsZ, MeshZ=CalcField(coil)
