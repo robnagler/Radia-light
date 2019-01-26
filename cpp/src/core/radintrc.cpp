@@ -490,12 +490,6 @@ void radTInteraction::SetupInteractMatrix()
 		}
 		EmptyTransPtrVect();
 	}
-
-	for(int ClNo=0; ClNo<AmOfMainElem; ClNo++)
-	{
-		radTg3dRelax* g3dRelaxPtrClNo = g3dRelaxPtrVect[ClNo];
-		g3dRelaxPtrVect[ClNo] = g3dRelaxPtrClNo->FormalIntrctMemberPtr();
-	}
 }
 
 //-------------------------------------------------------------------------
