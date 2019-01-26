@@ -458,8 +458,8 @@ void radTInteraction::SetupInteractMatrix()
 	{
                 radTFieldKey FieldKeyInteract; FieldKeyInteract.B_=FieldKeyInteract.H_=FieldKeyInteract.PreRelax_=1;
                 TVector3d ZeroVect(0.,0.,0.);
-
                 int AmOfElemWithSym = CountRelaxElemsWithSym();
+                TMatrix3d ColumnResult[AmOfElemWithSym];
 
 		FillInTransPtrVectForElem(ColNo, 'I');
 		radTg3dRelax* g3dRelaxPtrColNo = g3dRelaxPtrVect[ColNo];
@@ -482,13 +482,19 @@ void radTInteraction::SetupInteractMatrix()
 				BufSubMatrix.Str1 = Field.H;
 				BufSubMatrix.Str2 = Field.A;
 
+                                // local op that does a matrix multiply with constant
 				TransPtrVect[i]->TrMatrix(BufSubMatrix);
 				SubMatrix += BufSubMatrix;
 			}
+                        // local op that matrix multiplies inverse with constant
 			MainTransPtrArray[StrNo]->TrMatrix_inv(SubMatrix);
-			InteractMatrix[StrNo][ColNo] = SubMatrix;
+			ColumnResult[StrNo] = SubMatrix;
 		}
 		EmptyTransPtrVect();
+		for(int StrNo=0; StrNo<AmOfMainElem; StrNo++)
+                {
+                        InteractMatrix[StrNo][ColNo] = ColumnResult[StrNo];
+                }
 	}
 }
 
