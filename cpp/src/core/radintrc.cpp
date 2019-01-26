@@ -461,40 +461,58 @@ void radTInteraction::SetupInteractMatrix()
 	int AmOfElemWithSym = CountRelaxElemsWithSym();
 	//--EndNew
 
+#pragma omp parallel for
 	for(int ColNo=0; ColNo<AmOfMainElem; ColNo++)
 	{
+          radTg3dRelax* g3dRelaxPtrColNo;
+#pragma omp critical(SetupInteractMatrix)
+          {
 		FillInTransPtrVectForElem(ColNo, 'I');
-		radTg3dRelax* g3dRelaxPtrColNo = g3dRelaxPtrVect[ColNo];
+		g3dRelaxPtrColNo = g3dRelaxPtrVect[ColNo];
 
+          }
 		for(int StrNo=0; StrNo<AmOfMainElem; StrNo++)
 		{
-			TVector3d InitObsPoiVect = MainTransPtrArray[StrNo]->TrPoint((g3dRelaxPtrVect[StrNo])->ReturnCentrPoint());
+                  TVector3d InitObsPoiVect;
 
 			TMatrix3d SubMatrix(ZeroVect, ZeroVect, ZeroVect), BufSubMatrix;
-#pragma omp parallel for
+
+#pragma omp critical(SetupInteractMatrix)
+                        {
+                  InitObsPoiVect = MainTransPtrArray[StrNo]->TrPoint((g3dRelaxPtrVect[StrNo])->ReturnCentrPoint());
+                }
 			for(unsigned i=0; i<TransPtrVect.size(); i++)
 			{
-				TVector3d ObsPoiVect = TransPtrVect[i]->TrPoint_inv(InitObsPoiVect);
-
+                          TVector3d ObsPoiVect;
 				radTField Field(FieldKeyInteract, CompCriterium, ObsPoiVect, ZeroVect, ZeroVect, ZeroVect, ZeroVect, 0.);
-				Field.AmOfIntrctElemWithSym = AmOfElemWithSym; // New, may be changed later
+#pragma omp critical(SetupInteractMatrix)
+                                {
+                                  ObsPoiVect = TransPtrVect[i]->TrPoint_inv(InitObsPoiVect);
+                                  Field.AmOfIntrctElemWithSym = AmOfElemWithSym; // New, may be changed later
 
+                                }
 				g3dRelaxPtrColNo->B_comp(&Field);
 
+#pragma omp critical(SetupInteractMatrix)
+          {
 				BufSubMatrix.Str0 = Field.B;
 				BufSubMatrix.Str1 = Field.H;
 				BufSubMatrix.Str2 = Field.A;
 
 				TransPtrVect[i]->TrMatrix(BufSubMatrix);
-#pragma omp critical(SubMatrixUpdate)
-                                {
                                         SubMatrix += BufSubMatrix;
-                                }
+          }
 			}
+#pragma omp critical(SetupInteractMatrix)
+          {
 			MainTransPtrArray[StrNo]->TrMatrix_inv(SubMatrix);
 			InteractMatrix[StrNo][ColNo] = SubMatrix;
+          }
 		}
+#pragma omp critical(SetupInteractMatrix)
+          {
 		EmptyTransPtrVect();
+          }
 	}
 
 	//--New
