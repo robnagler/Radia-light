@@ -27,10 +27,15 @@ public:
 	int* pcount;
 
 	radTHandle () { rep=0; pcount=0;}
-	radTHandle (T* pp) : rep(pp), pcount(new int) { /* (*pcount)=0; */ (*pcount)=1;}
+	radTHandle (T* pp) : rep(pp), pcount(new int) {
+#pragma omp critical(radTHandle)
+          {
+          /* (*pcount)=0; */ (*pcount)=1;
+          }
+        }
 	radTHandle (const radTHandle& r) : rep(r.rep), pcount(r.pcount)
 	{
-#pragma omp critical(init_copy)
+#pragma omp critical(radTHandle)
           {
 		if(pcount != 0) (*pcount)++;
           }
@@ -40,7 +45,7 @@ public:
 	{
           T* rep_to_delete = 0;
           int* pcount_to_delete = 0;
-#pragma omp critical(destroy)
+#pragma omp critical(radTHandle)
           {
 		if(pcount!=0)
 			if(--(*pcount)==0)
@@ -70,7 +75,7 @@ public:
 	{
           T* rep_to_delete = 0;
           int* pcount_to_delete = 0;
-#pragma omp critical(bind)
+#pragma omp critical(radTHandle)
           {
 		if(rep!=r.rep)
 		{
@@ -105,7 +110,7 @@ public:
 	int operator<(const radTHandle& r)
 	{
           int res;
-#pragma omp critical(less_than)
+#pragma omp critical(radTHandle)
           {
             res = rep<r.rep ? 1 : 0;
           }
@@ -115,7 +120,7 @@ public:
 	int operator==(const radTHandle& r)
 	{
           int res;
-#pragma omp critical(equals)
+#pragma omp critical(radTHandle)
           {
             res = rep==r.rep ? 1 : 0;
           }
@@ -133,7 +138,7 @@ public:
 template<class T> inline int operator <(const radTHandle<T>& h1, const radTHandle<T>& h2)
 {
   int res;
-#pragma omp critical(less_than_op)
+#pragma omp critical(radTHandle)
   {
   res = h1.rep < h2.rep;
   }
@@ -145,7 +150,7 @@ template<class T> inline int operator <(const radTHandle<T>& h1, const radTHandl
 template<class T> inline int operator ==(const radTHandle<T>& h1, const radTHandle<T>& h2)
 {
   int res;
-#pragma omp critical(equals_op)
+#pragma omp critical(radTHandle)
   {
   res = h1.rep == h2.rep;
   }
