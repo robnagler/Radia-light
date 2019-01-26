@@ -452,6 +452,8 @@ int radTInteraction::CountRelaxElemsWithSym()
 
 //-------------------------------------------------------------------------
 
+typedef double CellResult[9];
+
 void radTInteraction::SetupInteractMatrix()
 {
 	for(int ColNo=0; ColNo<AmOfMainElem; ColNo++)
@@ -459,7 +461,7 @@ void radTInteraction::SetupInteractMatrix()
                 radTFieldKey FieldKeyInteract; FieldKeyInteract.B_=FieldKeyInteract.H_=FieldKeyInteract.PreRelax_=1;
                 TVector3d ZeroVect(0.,0.,0.);
                 int AmOfElemWithSym = CountRelaxElemsWithSym();
-                TMatrix3d ColumnResult[AmOfElemWithSym];
+                CellResult ColumnResult[AmOfElemWithSym];
 
 		FillInTransPtrVectForElem(ColNo, 'I');
 		radTg3dRelax* g3dRelaxPtrColNo = g3dRelaxPtrVect[ColNo];
@@ -488,12 +490,28 @@ void radTInteraction::SetupInteractMatrix()
 			}
                         // local op that matrix multiplies inverse with constant
 			MainTransPtrArray[StrNo]->TrMatrix_inv(SubMatrix);
-			ColumnResult[StrNo] = SubMatrix;
+			ColumnResult[StrNo][0] = SubMatrix.Str0.x;
+			ColumnResult[StrNo][1] = SubMatrix.Str0.y;
+			ColumnResult[StrNo][2] = SubMatrix.Str0.z;
+			ColumnResult[StrNo][3] = SubMatrix.Str1.x;
+			ColumnResult[StrNo][4] = SubMatrix.Str1.y;
+			ColumnResult[StrNo][5] = SubMatrix.Str1.z;
+			ColumnResult[StrNo][6] = SubMatrix.Str2.x;
+			ColumnResult[StrNo][7] = SubMatrix.Str2.y;
+			ColumnResult[StrNo][8] = SubMatrix.Str2.z;
 		}
 		EmptyTransPtrVect();
 		for(int StrNo=0; StrNo<AmOfMainElem; StrNo++)
                 {
-                        InteractMatrix[StrNo][ColNo] = ColumnResult[StrNo];
+                        InteractMatrix[StrNo][ColNo].Str0.x = ColumnResult[StrNo][0];
+                        InteractMatrix[StrNo][ColNo].Str0.y = ColumnResult[StrNo][1];
+                        InteractMatrix[StrNo][ColNo].Str0.z = ColumnResult[StrNo][2];
+                        InteractMatrix[StrNo][ColNo].Str1.x = ColumnResult[StrNo][3];
+                        InteractMatrix[StrNo][ColNo].Str1.y = ColumnResult[StrNo][4];
+                        InteractMatrix[StrNo][ColNo].Str1.z = ColumnResult[StrNo][5];
+                        InteractMatrix[StrNo][ColNo].Str2.x = ColumnResult[StrNo][6];
+                        InteractMatrix[StrNo][ColNo].Str2.y = ColumnResult[StrNo][7];
+                        InteractMatrix[StrNo][ColNo].Str2.z = ColumnResult[StrNo][8];
                 }
 	}
 }
