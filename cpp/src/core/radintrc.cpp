@@ -9,7 +9,7 @@
 * Author(s):      Oleg Chubar
 *
 * First release:  1997
-* 
+*
 * Copyright (C):  1997 by European Synchrotron Radiation Facility, France
 *                 All Rights Reserved
 *
@@ -23,7 +23,7 @@
 
 radTInteraction::radTInteraction(const radThg& In_hg, const radThg& In_hgMoreExtSrc, const radTCompCriterium& InCompCriterium, short InMemAllocTotAtOnce, char ExtraExternFieldArrayIsNeeded, char KeepTransData)
 {
-	if(!Setup(In_hg, In_hgMoreExtSrc, InCompCriterium, InMemAllocTotAtOnce, ExtraExternFieldArrayIsNeeded, KeepTransData)) 
+	if(!Setup(In_hg, In_hgMoreExtSrc, InCompCriterium, InMemAllocTotAtOnce, ExtraExternFieldArrayIsNeeded, KeepTransData))
 	{
 		SomethingIsWrong = 1;
 		Send.ErrorMessage("Radia::Error118");
@@ -176,7 +176,7 @@ void radTInteraction::CountMainRelaxElems(radTg3d* g3dPtr, radTlphgPtr* CurrList
 			PushFrontNativeElemTransList(g3dRelaxPtr, TotalListOfElemTransPtrPtr);
 			IntVectOfPtrToListsOfTransPtr.push_back(TotalListOfElemTransPtrPtr);
 		}
-		else 
+		else
 		{
 			g3dExternPtrVect.push_back(g3dPtr);
 			AmOfExtElem++;
@@ -235,18 +235,18 @@ void radTInteraction::CountMainRelaxElems(radTg3d* g3dPtr, radTlphgPtr* CurrList
 		{
 		//--EndNew
 			radTlphgPtr* LocListOfTransPtrPtr = CurrListOfTransPtrPtr;
-			
+
 			short GroupListOfTransIsNotEmpty = 1;
 			if(GroupPtr->g3dListOfTransform.empty()) GroupListOfTransIsNotEmpty = 0;
 
-			if(GroupListOfTransIsNotEmpty) 
+			if(GroupListOfTransIsNotEmpty)
 			{
 				LocListOfTransPtrPtr = new radTlphgPtr(*CurrListOfTransPtrPtr);
 				PushFrontNativeElemTransList(GroupPtr, LocListOfTransPtrPtr);
 			}
 
 			for(radTmhg::iterator iter = GroupPtr->GroupMapOfHandlers.begin();
-				iter != GroupPtr->GroupMapOfHandlers.end(); ++iter) 
+				iter != GroupPtr->GroupMapOfHandlers.end(); ++iter)
 				CountMainRelaxElems((radTg3d*)((*iter).second.rep), LocListOfTransPtrPtr);
 
 			if(GroupListOfTransIsNotEmpty) delete LocListOfTransPtrPtr;
@@ -283,7 +283,7 @@ void radTInteraction::FillInRelaxSubIntervArray() // New
 	}
 	if(CurrentStartNo != AmOfMainElem)
 		RelaxSubIntervArray[++PlainCount] = radTRelaxSubInterval(CurrentStartNo, AmOfMainElem-1, RelaxApart);
-	
+
 	AmOfRelaxSubInterv = ++PlainCount;
 
 	RelaxSubIntervConstrVect.erase(RelaxSubIntervConstrVect.begin(), RelaxSubIntervConstrVect.end());
@@ -296,7 +296,7 @@ void radTInteraction::AllocateMemory(char AuxOldMagnArrayIsNeeded)
 	//try
 	//{
 		ExternFieldArray = new TVector3d[AmOfMainElem];
-		if(AuxOldMagnArrayIsNeeded) 
+		if(AuxOldMagnArrayIsNeeded)
 		{
 			AuxOldMagnArray = new TVector3d[AmOfMainElem];
 			AuxOldFieldArray = new TVector3d[AmOfMainElem];
@@ -419,7 +419,7 @@ void radTInteraction::FillInMainTransPtrArray()
 	for(int i=0; i<AmOfMainElem; i++)
 	{
 		FillInTransPtrVectForElem(i, 'I');
-		if(Cast.IdentTransCast(TransPtrVect[0]) == 0) 
+		if(Cast.IdentTransCast(TransPtrVect[0]) == 0)
 		{
 			MainTransPtrArray[i] = new radTrans(*(TransPtrVect[0]));
 		}
@@ -440,7 +440,7 @@ int radTInteraction::CountRelaxElemsWithSym()
 		radTlphgPtr& Loc_lphgPtr = *(IntVectOfPtrToListsOfTransPtr[i]);
 		int LocTotMult = 1;
 
-		for(radTlphgPtr::iterator TrIter = Loc_lphgPtr.begin();	
+		for(radTlphgPtr::iterator TrIter = Loc_lphgPtr.begin();
 			TrIter != Loc_lphgPtr.end(); ++TrIter)
 		{
 			LocTotMult *= (**TrIter).m;
@@ -454,19 +454,17 @@ int radTInteraction::CountRelaxElemsWithSym()
 
 void radTInteraction::SetupInteractMatrix()
 {
-	radTFieldKey FieldKeyInteract; FieldKeyInteract.B_=FieldKeyInteract.H_=FieldKeyInteract.PreRelax_=1;
-	TVector3d ZeroVect(0.,0.,0.);
-
-	//--New
-	int AmOfElemWithSym = CountRelaxElemsWithSym();
-	//--EndNew
-
 	for(int ColNo=0; ColNo<AmOfMainElem; ColNo++)
 	{
+                radTFieldKey FieldKeyInteract; FieldKeyInteract.B_=FieldKeyInteract.H_=FieldKeyInteract.PreRelax_=1;
+                TVector3d ZeroVect(0.,0.,0.);
+
+                int AmOfElemWithSym = CountRelaxElemsWithSym();
+
 		FillInTransPtrVectForElem(ColNo, 'I');
 		radTg3dRelax* g3dRelaxPtrColNo = g3dRelaxPtrVect[ColNo];
 
-		for(int StrNo=0; StrNo<AmOfMainElem; StrNo++) 
+		for(int StrNo=0; StrNo<AmOfMainElem; StrNo++)
 		{
 			TVector3d InitObsPoiVect = MainTransPtrArray[StrNo]->TrPoint((g3dRelaxPtrVect[StrNo])->ReturnCentrPoint());
 
@@ -480,9 +478,9 @@ void radTInteraction::SetupInteractMatrix()
 
 				g3dRelaxPtrColNo->B_comp(&Field);
 
-				BufSubMatrix.Str0 = Field.B; 
-				BufSubMatrix.Str1 = Field.H; 
-				BufSubMatrix.Str2 = Field.A; 
+				BufSubMatrix.Str0 = Field.B;
+				BufSubMatrix.Str1 = Field.H;
+				BufSubMatrix.Str2 = Field.A;
 
 				TransPtrVect[i]->TrMatrix(BufSubMatrix);
 				SubMatrix += BufSubMatrix;
@@ -493,13 +491,11 @@ void radTInteraction::SetupInteractMatrix()
 		EmptyTransPtrVect();
 	}
 
-	//--New
 	for(int ClNo=0; ClNo<AmOfMainElem; ClNo++)
 	{
 		radTg3dRelax* g3dRelaxPtrClNo = g3dRelaxPtrVect[ClNo];
 		g3dRelaxPtrVect[ClNo] = g3dRelaxPtrClNo->FormalIntrctMemberPtr();
 	}
-	//--EndNew
 }
 
 //-------------------------------------------------------------------------
@@ -516,7 +512,7 @@ void radTInteraction::SetupExternFieldArray()
 		FillInTransPtrVectForElem(ExtElNo, 'E');
 		radTg3d* ExtElPtr = g3dExternPtrVect[ExtElNo];
 
-		for(int StrNo=0; StrNo<AmOfMainElem; StrNo++) 
+		for(int StrNo=0; StrNo<AmOfMainElem; StrNo++)
 		{
 			InitObsPoiVect = MainTransPtrArray[StrNo]->TrPoint((g3dRelaxPtrVect[StrNo])->CentrPoint);
 			TVector3d BufVect(0.,0.,0.);
@@ -543,7 +539,7 @@ void radTInteraction::AddExternFieldFromMoreExtSource()
 		radTFieldKey FieldKeyExtern; FieldKeyExtern.H_=1;
 		TVector3d ZeroVect(0.,0.,0.), InitObsPoiVect(0.,0.,0.);
 
-		for(int StrNo=0; StrNo<AmOfMainElem; StrNo++) 
+		for(int StrNo=0; StrNo<AmOfMainElem; StrNo++)
 		{
 			radTrans* ATransPtr = MainTransPtrArray[StrNo];
 
@@ -570,7 +566,7 @@ void radTInteraction::AddMoreExternField(const radThg& hExtraExtSrc)
 	radTFieldKey FieldKeyExtern; FieldKeyExtern.H_=1;
 	TVector3d ZeroVect(0.,0.,0.), InitObsPoiVect(0.,0.,0.);
 
-	for(int StrNo=0; StrNo<AmOfMainElem; StrNo++) 
+	for(int StrNo=0; StrNo<AmOfMainElem; StrNo++)
 	{
 		radTrans* aTransPtr = MainTransPtrArray[StrNo];
         InitObsPoiVect = MainTransPtrArray[StrNo]->TrPoint((g3dRelaxPtrVect[StrNo])->CentrPoint);
@@ -591,7 +587,7 @@ void radTInteraction::ZeroAuxOldArrays()
 	if(AuxOldMagnArray != NULL)
 	{
 		TVector3d *tAuxOldMagn = AuxOldMagnArray;
-		for(int StrNo=0; StrNo<AmOfMainElem; StrNo++) 
+		for(int StrNo=0; StrNo<AmOfMainElem; StrNo++)
 		{
 			tAuxOldMagn->x = 0;
 			tAuxOldMagn->y = 0;
@@ -601,7 +597,7 @@ void radTInteraction::ZeroAuxOldArrays()
 	if(AuxOldFieldArray != NULL)
 	{
 		TVector3d *tAuxOldField = AuxOldFieldArray;
-		for(int StrNo=0; StrNo<AmOfMainElem; StrNo++) 
+		for(int StrNo=0; StrNo<AmOfMainElem; StrNo++)
 		{
 			tAuxOldField->x = 0;
 			tAuxOldField->y = 0;
@@ -620,7 +616,7 @@ void radTInteraction::SubstractOldMagn()
 	for(int StNo=0; StNo<AmOfMainElem; StNo++)
 	{
 		TVector3d &M = (g3dRelaxPtrVect[StNo])->Magn;
-		M -= *(tAuxOldMagn++); 
+		M -= *(tAuxOldMagn++);
     }
 }
 
@@ -634,7 +630,7 @@ void radTInteraction::AddOldMagn()
 	for(int StNo=0; StNo<AmOfMainElem; StNo++)
 	{
 		TVector3d &M = (g3dRelaxPtrVect[StNo])->Magn;
-		M += *(tAuxOldMagn++); 
+		M += *(tAuxOldMagn++);
     }
 }
 
@@ -648,7 +644,7 @@ double radTInteraction::CalcQuadNewOldMagnDif()
 	TVector3d *tAuxOldMagn = AuxOldMagnArray;
 	for(int StNo=0; StNo<AmOfMainElem; StNo++)
 	{
-		TVector3d CurDifM = (g3dRelaxPtrVect[StNo])->Magn - *(tAuxOldMagn++); 
+		TVector3d CurDifM = (g3dRelaxPtrVect[StNo])->Magn - *(tAuxOldMagn++);
 		SumE2 += CurDifM.AmpE2(); //CurDifM*CurDifM;
     }
 	return SumE2;
@@ -686,7 +682,7 @@ void radTInteraction::DumpBinVectOfPtrToListsOfTransPtr(CAuxBinStrVect& oStr, ra
 		radTlphgPtr* curListOfElemTransPtrPtr = VectOfPtrToListsOfTransPtr[i];
 		int size_curListOfElemTransPtr = 0;
 		if(curListOfElemTransPtrPtr != 0) size_curListOfElemTransPtr = (int)curListOfElemTransPtrPtr->size();
-		
+
 		oStr << size_curListOfElemTransPtr;
 		if(size_curListOfElemTransPtr > 0)
 		{
@@ -695,7 +691,7 @@ void radTInteraction::DumpBinVectOfPtrToListsOfTransPtr(CAuxBinStrVect& oStr, ra
 				radTPair_int_hg *p_m_hg = *TrIter;
 				//int mult = 0;
 
-				if(p_m_hg != 0) 
+				if(p_m_hg != 0)
 				{
 					int mult = p_m_hg->m;
 					radThg &hg = p_m_hg->Handler_g;
@@ -731,7 +727,7 @@ void radTInteraction::DumpBin(CAuxBinStrVect& oStr, vector<int>& vElemKeysOut, m
 		}
 		if(existKeySource == 0)
 		{
-			existKeySource = gUniqueMapKey; 
+			existKeySource = gUniqueMapKey;
 			gMapOfHandlers[gUniqueMapKey++] = SourceHandle;
 		}
 		int indExist = CAuxParse::FindElemInd(existKeySource, vElemKeysOut);
@@ -752,7 +748,7 @@ void radTInteraction::DumpBin(CAuxBinStrVect& oStr, vector<int>& vElemKeysOut, m
 		}
 		if(existKeyMoreExtSource == 0)
 		{
-			existKeyMoreExtSource = gUniqueMapKey; 
+			existKeyMoreExtSource = gUniqueMapKey;
 			gMapOfHandlers[gUniqueMapKey++] = MoreExtSourceHandle;
 		}
 		int indExist = CAuxParse::FindElemInd(existKeyMoreExtSource, vElemKeysOut);
@@ -837,7 +833,7 @@ void radTInteraction::DumpBin(CAuxBinStrVect& oStr, vector<int>& vElemKeysOut, m
 				radThg hg(pTransCopy);
 				int oldKey = gUniqueMapKey;
 				gMapOfHandlers[gUniqueMapKey++] = hg;
-				
+
 				pTransCopy->DumpBin(oStr, vElemKeysOut, gMapOfHandlers, gUniqueMapKey, oldKey);
 				vIndTransPtrVect.push_back(oldKey);
 			}
@@ -865,7 +861,7 @@ void radTInteraction::DumpBin(CAuxBinStrVect& oStr, vector<int>& vElemKeysOut, m
 					radThg hg(pTransCopy);
 					int oldKey = gUniqueMapKey;
 					gMapOfHandlers[gUniqueMapKey++] = hg;
-				
+
 					pTransCopy->DumpBin(oStr, vElemKeysOut, gMapOfHandlers, gUniqueMapKey, oldKey);
 					vIndMainTrans.push_back(oldKey);
 				}
@@ -1009,7 +1005,7 @@ void radTInteraction::DumpBin(CAuxBinStrVect& oStr, vector<int>& vElemKeysOut, m
 
 	//radTVectRelaxSubInterval RelaxSubIntervConstrVect; // New
 	int sizeRelaxSubIntervConstrVect = (int)RelaxSubIntervConstrVect.size();
-	oStr << sizeRelaxSubIntervConstrVect;	
+	oStr << sizeRelaxSubIntervConstrVect;
 	if(sizeRelaxSubIntervConstrVect > 0)
 	{
 		for(int i=0; i<sizeRelaxSubIntervConstrVect; i++)
@@ -1020,7 +1016,7 @@ void radTInteraction::DumpBin(CAuxBinStrVect& oStr, vector<int>& vElemKeysOut, m
 			oStr << (int)(relaxSubInterval.SubIntervalID);
 		}
 
-		//radTRelaxSubInterval* RelaxSubIntervArray; // New 
+		//radTRelaxSubInterval* RelaxSubIntervArray; // New
 		if(RelaxSubIntervArray != NULL)
 		{
 			int MaxSubIntervArraySize = 2*sizeRelaxSubIntervConstrVect + 1;
@@ -1057,7 +1053,7 @@ void radTInteraction::DumpBin(CAuxBinStrVect& oStr, vector<int>& vElemKeysOut, m
 	int size_vIndMainTrans = (int)vIndMainTrans.size();
 	oStr << size_vIndMainTrans;
 	for(int k=0; k<size_vIndMainTrans; k++) oStr << vIndMainTrans[k];
-	
+
 	//int AmOfRelaxSubInterv;
 	oStr << AmOfRelaxSubInterv;
 
@@ -1326,7 +1322,7 @@ radTInteraction::radTInteraction(CAuxBinStrVect& inStr, map<int, int>& mKeysOldN
 			RelaxSubIntervConstrVect.push_back(relaxSubInterval);
 		}
 
-		//radTRelaxSubInterval* RelaxSubIntervArray; // New 
+		//radTRelaxSubInterval* RelaxSubIntervArray; // New
 		int MaxSubIntervArraySize = 0;
 		inStr >> MaxSubIntervArraySize;
 		if(MaxSubIntervArraySize > 0)
