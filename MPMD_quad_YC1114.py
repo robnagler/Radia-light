@@ -1,10 +1,12 @@
 from __future__ import print_function #Python 2.7 compatibility
-import radia as rad
 from uti_plot import *
-import time
-import numpy
-import math
 import csv
+import math
+import mpi4py.MPI
+import numpy
+import radia as rad
+import sys
+import time
 
 
 #print('MPMD quadrupole benchmark test 10/1')
@@ -182,10 +184,14 @@ full=rad.ObjCnt([yoke,coil])
 
 t0 = time.time()
 res = rad.Solve(full, 0.0001, 10000)
+mpi = mpi4py.MPI.COMM_WORLD
+if mpi.Get_rank() != 0:
+    sys.exit()
+
 #print('Solved for Magnetizations in', round(time.time() - t0, 2), 's')
 expect = [9.991124106723865e-05, 1.7586937018625115, 0.009296872940670615, 744.0]
 assert expect == res, \
-    ' {} expected != actual {}'.format(expect, res)
+    '{} expected != actual {}'.format(expect, res)
 #print('Relaxation Results:', res)
 
 #ByVsX, MeshX, ByVsZ, MeshZ=CalcField(coil)
