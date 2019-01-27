@@ -19,6 +19,18 @@
 #include "radintrc.h"
 #include "radsbdrc.h"
 
+#define _error(...) fprintf(stderr, __VA_ARGS__)
+#define _debug(...) fprintf(stderr, __VA_ARGS__)
+#define _debug_mpi(...) 0;
+#define _debug_x(...) _debug(__VA_ARGS__)
+
+#define _mpi_error(s, m, w) \
+        char e[MPI_MAX_ERROR_STRING]; \
+        int i; MPI_Error_string(s, e, &i); \
+        _error("%s: mpi_%s(): %d %s\n", w, m, s, e); \
+        MPI_Abort(MPI_COMM_WORLD, 7);
+
+
 //-------------------------------------------------------------------------
 //-------------------------------------------------------------------------
 
@@ -165,6 +177,7 @@ radTInteraction::~radTInteraction()
 void radTInteraction::CountMainRelaxElems(radTg3d* g3dPtr, radTlphgPtr* CurrListOfTransPtrPtr)
 {
 	radTGroup* GroupPtr = Cast.GroupCast(g3dPtr);
+        _debug_x("countmain AmOfMainElem=%d Gr\n", AmOfMainElem);
 	if(GroupPtr == 0)
 	{
 		radTg3dRelax* g3dRelaxPtr = Cast.g3dRelaxCast(g3dPtr);
@@ -452,15 +465,6 @@ int radTInteraction::CountRelaxElemsWithSym()
 }
 
 //-------------------------------------------------------------------------
-#define _error(...) fprintf(stderr, __VA_ARGS__)
-#define _debug(...) fprintf(stderr, __VA_ARGS__)
-
-#define _mpi_error(s, m, w) \
-        char e[MPI_MAX_ERROR_STRING]; \
-        int i; MPI_Error_string(s, e, &i); \
-        _error("%s: mpi_%s(): %d %s\n", w, m, s, e); \
-        MPI_Abort(MPI_COMM_WORLD, 7);
-
 void radTInteraction::SetupInteractMatrix()
 {
         int AmOfElemWithSym = CountRelaxElemsWithSym();
@@ -497,7 +501,7 @@ void radTInteraction::SetupInteractMatrixCollector(int AmOfElemWithSym, int resS
                         workers = num_workers;
                 }
                 for (int w = 1, c = ColNo; w <= workers; w++, c++) {
-                        _debug("collector: send worker=%d c=%d\n", w, c);
+                        _debug_mpi("collector: send worker=%d c=%d\n", w, c);
                         int s = MPI_Send(
                                  &c,
                                  1,
@@ -509,10 +513,10 @@ void radTInteraction::SetupInteractMatrixCollector(int AmOfElemWithSym, int resS
                         if (s != MPI_SUCCESS) {
                                 _mpi_error(s, "send", "collector");
                         }
-                        _debug("collector: send done\n");
+                        _debug_mpi("collector: send done\n");
                 }
                 for (int w = 1; w <= workers; w++) {
-                        _debug("collector: waiting\n");
+                        _debug_mpi("collector: waiting\n");
                         int s = MPI_Recv(
                                  res,
                                  resSize,
@@ -530,7 +534,7 @@ void radTInteraction::SetupInteractMatrixCollector(int AmOfElemWithSym, int resS
                                 MPI_Abort(MPI_COMM_WORLD, 10);
                         }
                         int c = ColNo + status.MPI_SOURCE - 1;
-                        _debug("collector: recv worker=%d c=%d\n", status.MPI_SOURCE, c);
+                        _debug_mpi("collector: recv worker=%d c=%d\n", status.MPI_SOURCE, c);
                         double *r = res;
                         for(int StrNo=0; StrNo<AmOfMainElem; StrNo++) {
                                 InteractMatrix[StrNo][c].Str0.x = *r++;
@@ -548,7 +552,7 @@ void radTInteraction::SetupInteractMatrixCollector(int AmOfElemWithSym, int resS
         }
         // tell all workers to exit
         for (int w = 1; w <= num_workers; w++) {
-                _debug("collector: terminate worker=%d\n", w);
+                _debug_mpi("collector: terminate worker=%d\n", w);
                 int s = MPI_Send(
                          &ColNo,
                          1,
@@ -567,7 +571,7 @@ void radTInteraction::SetupInteractMatrixWorker(int AmOfElemWithSym, int resSize
         while (1) {
                 MPI_Status status;
                 int ColNo;
-                _debug("worker: waiting\n");
+                _debug_mpi("worker: waiting\n");
                 int s = MPI_Recv(
                          &ColNo,
                          1,
@@ -580,17 +584,17 @@ void radTInteraction::SetupInteractMatrixWorker(int AmOfElemWithSym, int resSize
                 if (s != MPI_SUCCESS) {
                         _mpi_error(s, "recv", "worker");
                 }
-                _debug("worker: running\n");
+                _debug_mpi("worker: running\n");
                 if (status.MPI_ERROR != 0) {
                         _error("worker: MPI_ERROR=%d\n", status.MPI_ERROR);
                         MPI_Abort(MPI_COMM_WORLD, 1);
                 }
-                _debug("worker: recv ColNo=%d\n", ColNo);
+                _debug_mpi("worker: recv ColNo=%d\n", ColNo);
                 if (ColNo >= AmOfElemWithSym) {
                         break;
                 }
                 SetupInteractMatrixColumn(ColNo, AmOfMainElem, res);
-                _debug("worker: reply ColNo=%d\n", ColNo);
+                _debug_mpi("worker: reply ColNo=%d\n", ColNo);
                 s = MPI_Send(
                          res,
                          resSize,
@@ -609,34 +613,24 @@ void radTInteraction::SetupInteractMatrixWorker(int AmOfElemWithSym, int resSize
 
 void radTInteraction::SetupInteractMatrixColumn(int ColNo, int AmOfElemWithSym, double *res)
 {
-        if (ColNo == 905) { _debug("0000000000 res=%x\n", res); }
         radTFieldKey FieldKeyInteract; FieldKeyInteract.B_=FieldKeyInteract.H_=FieldKeyInteract.PreRelax_=1;
         TVector3d ZeroVect(0.,0.,0.);
-        if (ColNo == 905) { _debug("bbbbbbbb 123\n"); }
 
 	radTlphgPtr* PtrToListOfPtrToTrans = NULL;
-        if (ColNo == 905) { _debug("rrrrrrrrrrrrr\n"); }
 	PtrToListOfPtrToTrans = IntVectOfPtrToListsOfTransPtr[ColNo];
-        if (ColNo == 905) { _debug("qqqqqqqqq %x\n", PtrToListOfPtrToTrans); }
+        if (ColNo == 905) { _debug_x("qqqqqqqqq %x\n", PtrToListOfPtrToTrans); }
 	if (PtrToListOfPtrToTrans->empty()) {
-                if (ColNo == 905) { _debug("wwwwwwwwwwwww\n"); }
                 TransPtrVect.push_back(IdentTransPtr);
         }
 	else {
-                if (ColNo == 905) { _debug("yyyyyyyyyyyyyyyyy\n"); }
                 NestedFor_Trans(IdentTransPtr, PtrToListOfPtrToTrans->begin(), ColNo, 'I');
         }
-        if (ColNo == 905) { _debug("cccccccccccccccccc\n"); }
         radTg3dRelax* g3dRelaxPtrColNo = g3dRelaxPtrVect[ColNo];
-        if (ColNo == 905) { _debug("dddddddddddddddd\n"); }
         for(int StrNo=0; StrNo<AmOfMainElem; StrNo++)
         {
-                if (ColNo == 905) { _debug("eeeeeeeeeeeeee %d\n", StrNo); }
                 TVector3d InitObsPoiVect = MainTransPtrArray[StrNo]->TrPoint((g3dRelaxPtrVect[StrNo])->ReturnCentrPoint());
 
-                if (ColNo == 905) { _debug("ffffffffffffffff  %d\n", StrNo); }
                 TMatrix3d SubMatrix(ZeroVect, ZeroVect, ZeroVect), BufSubMatrix;
-                if (ColNo == 905) { _debug("aaaaaaaaaaaa %d\n", StrNo); }
                 for(unsigned i=0; i<TransPtrVect.size(); i++)
                 {
                         TVector3d ObsPoiVect = TransPtrVect[i]->TrPoint_inv(InitObsPoiVect);
@@ -654,7 +648,6 @@ void radTInteraction::SetupInteractMatrixColumn(int ColNo, int AmOfElemWithSym, 
                         TransPtrVect[i]->TrMatrix(BufSubMatrix);
                         SubMatrix += BufSubMatrix;
                 }
-                if (ColNo == 905) { _debug("zzzzzzzzzzzzzz %d\n", StrNo); }
                 // local op that matrix multiplies inverse with constant
                 MainTransPtrArray[StrNo]->TrMatrix_inv(SubMatrix);
                 *res++ = SubMatrix.Str0.x;
