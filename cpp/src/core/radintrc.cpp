@@ -612,12 +612,12 @@ void radTInteraction::SetupInteractMatrixColumn(int ColNo, int AmOfElemWithSym, 
         if (ColNo == 905) { _debug("0000000000 res=%x\n", res); }
         radTFieldKey FieldKeyInteract; FieldKeyInteract.B_=FieldKeyInteract.H_=FieldKeyInteract.PreRelax_=1;
         TVector3d ZeroVect(0.,0.,0.);
-        if (ColNo == 905) { _debug("bbbbbbbbbbbbbbb\n"); }
+        if (ColNo == 905) { _debug("bbbbbbbb 123\n"); }
 
 	radTlphgPtr* PtrToListOfPtrToTrans = NULL;
         if (ColNo == 905) { _debug("rrrrrrrrrrrrr\n"); }
 	PtrToListOfPtrToTrans = IntVectOfPtrToListsOfTransPtr[ColNo];
-        if (ColNo == 905) { _debug("qqqqqqqqq\n"); }
+        if (ColNo == 905) { _debug("qqqqqqqqq %x\n", PtrToListOfPtrToTrans); }
 	if (PtrToListOfPtrToTrans->empty()) {
                 if (ColNo == 905) { _debug("wwwwwwwwwwwww\n"); }
                 TransPtrVect.push_back(IdentTransPtr);
