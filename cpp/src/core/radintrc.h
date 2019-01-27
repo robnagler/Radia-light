@@ -193,8 +193,8 @@ public:
 	void AllocateMemory(char ExtraExternFieldArrayIsNeeded);
 	void SetupInteractMatrix();
         void SetupInteractMatrixColumn(int ColNo, int AmOfElemWithSym, double *res);
-        void SetupInteractMatrixCollector(int AmOfElemWithSym, int resSize, double *res);
-        void SetupInteractMatrixWorker(int AmOfElemWithSym, int resSize, double *res);
+        void SetupInteractMatrixCollector(int resSize, double *res);
+        void SetupInteractMatrixWorker(int resSize, double *res);
 	void SetupExternFieldArray();
 	void AddExternFieldFromMoreExtSource();
 	void AddMoreExternField(const radThg& hExtraExtSrc);
