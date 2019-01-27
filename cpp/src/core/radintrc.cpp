@@ -452,6 +452,14 @@ int radTInteraction::CountRelaxElemsWithSym()
 }
 
 //-------------------------------------------------------------------------
+#define _error(...) fprintf(stderr, __VA_ARGS__)
+#define _debug(...) fprintf(stderr, __VA_ARGS__)
+
+#define _mpi_error(s, m, w) \
+        char e[MPI_MAX_ERROR_STRING]; \
+        int i; MPI_Error_string(s, e, &i); \
+        _error("%s: mpi_%s(): %d %s\n", w, m, s, e); \
+        MPI_Abort(MPI_COMM_WORLD, 7);
 
 void radTInteraction::SetupInteractMatrix()
 {
@@ -462,7 +470,7 @@ void radTInteraction::SetupInteractMatrix()
         MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
         if (world_rank > 0) {
                 SetupInteractMatrixWorker(AmOfElemWithSym, resSize, res);
-                fprintf(stderr, "worker did not exit properly\n");
+                _error("worker did not exit properly\n");
                 MPI_Abort(MPI_COMM_WORLD, 8);
         }
         SetupInteractMatrixCollector(AmOfElemWithSym, resSize, res);
@@ -474,10 +482,10 @@ void radTInteraction::SetupInteractMatrixCollector(int AmOfElemWithSym, int resS
         MPI_Comm_size(MPI_COMM_WORLD, &world_size);
         int num_workers = world_size - 1;
         if (num_workers <= 0) {
-                fprintf(stderr, "collector: world_size=%d expecting at least 2\n", world_size);
+                _error("collector: world_size=%d expecting at least 2\n", world_size);
                 MPI_Abort(MPI_COMM_WORLD, 9);
         }
-        fprintf(stderr, "collector: world_size=%d resSize=%d\n", world_size, resSize);
+        _error("collector: world_size=%d resSize=%d\n", world_size, resSize);
         int ColNo = 0;
         while (1) {
                 MPI_Status status;
@@ -489,19 +497,23 @@ void radTInteraction::SetupInteractMatrixCollector(int AmOfElemWithSym, int resS
                         workers = num_workers;
                 }
                 for (int w = 1, c = ColNo; w <= workers; w++, c++) {
-                        fprintf(stderr, "collector: send worker=%d c=%d\n", w, c);
-                        MPI_Send(
+                        _debug("collector: send worker=%d c=%d\n", w, c);
+                        int s = MPI_Send(
                                  &c,
                                  1,
                                  MPI_INT,
                                  w,
-                                 MPI_ANY_SOURCE,
+                                 0,
                                  MPI_COMM_WORLD
                         );
+                        if (s != MPI_SUCCESS) {
+                                _mpi_error(s, "send", "collector");
+                        }
+                        _debug("collector: send done\n");
                 }
                 for (int w = 1; w <= workers; w++) {
-                        fprintf(stderr, "collector: waiting\n");
-                        MPI_Recv(
+                        _debug("collector: waiting\n");
+                        int s = MPI_Recv(
                                  res,
                                  resSize,
                                  MPI_DOUBLE,
@@ -510,12 +522,15 @@ void radTInteraction::SetupInteractMatrixCollector(int AmOfElemWithSym, int resS
                                  MPI_COMM_WORLD,
                                  &status
                         );
+                        if (s != MPI_SUCCESS) {
+                                _mpi_error(s, "recv", "collector");
+                        }
                         if (status.MPI_ERROR != 0) {
-                                fprintf(stderr, "collector: MPI_ERROR=%d\n", status.MPI_ERROR);
+                                _error("collector: MPI_ERROR=%d\n", status.MPI_ERROR);
                                 MPI_Abort(MPI_COMM_WORLD, 10);
                         }
                         int c = ColNo + status.MPI_SOURCE - 1;
-                        fprintf(stderr, "collector: recv worker=%d c=%d\n", status.MPI_SOURCE, c);
+                        _debug("collector: recv worker=%d c=%d\n", status.MPI_SOURCE, c);
                         double *r = res;
                         for(int StrNo=0; StrNo<AmOfMainElem; StrNo++)
                         {
@@ -534,8 +549,8 @@ void radTInteraction::SetupInteractMatrixCollector(int AmOfElemWithSym, int resS
         }
         // tell all workers to exit
         for (int w = 1; w <= num_workers; w++) {
-                fprintf(stderr, "collector: terminate worker=%d\n", w);
-                MPI_Send(
+                _debug("collector: terminate worker=%d\n", w);
+                int s = MPI_Send(
                          &ColNo,
                          1,
                          MPI_INT,
@@ -543,6 +558,9 @@ void radTInteraction::SetupInteractMatrixCollector(int AmOfElemWithSym, int resS
                          MPI_ANY_SOURCE,
                          MPI_COMM_WORLD
                 );
+                if (s != MPI_SUCCESS) {
+                        _mpi_error(s, "send", "collector");
+                }
         }
 }
 
@@ -550,34 +568,41 @@ void radTInteraction::SetupInteractMatrixWorker(int AmOfElemWithSym, int resSize
         while (1) {
                 MPI_Status status;
                 int ColNo;
-                fprintf(stderr, "worker: waiting\n");
-                MPI_Recv(
+                _debug("worker: waiting\n");
+                int s = MPI_Recv(
                          &ColNo,
                          1,
                          MPI_INT,
                          MPI_ANY_SOURCE,
-                         MPI_ANY_TAG,
+                         0,
                          MPI_COMM_WORLD,
                          &status
                 );
+                if (s != MPI_SUCCESS) {
+                        _mpi_error(s, "recv", "worker");
+                }
+                _debug("worker: running\n");
                 if (status.MPI_ERROR != 0) {
-                        fprintf(stderr, "worker: MPI_ERROR=%d\n", status.MPI_ERROR);
+                        _error("worker: MPI_ERROR=%d\n", status.MPI_ERROR);
                         MPI_Abort(MPI_COMM_WORLD, 1);
                 }
+                _debug("worker: recv ColNo=%d\n", ColNo);
                 if (ColNo >= AmOfElemWithSym) {
                         break;
                 }
-                fprintf(stderr, "worker: recv ColNo=%d\n", ColNo);
                 SetupInteractMatrixColumn(ColNo, AmOfMainElem, res);
-                fprintf(stderr, "worker: send ColNo=%d\n", ColNo);
-                MPI_Send(
+                _debug("worker: reply ColNo=%d\n", ColNo);
+                s = MPI_Send(
                          res,
                          resSize,
                          MPI_DOUBLE,
                          status.MPI_SOURCE,
-                         MPI_ANY_TAG,
+                         0,
                          MPI_COMM_WORLD
                 );
+                if (s != MPI_SUCCESS) {
+                        _mpi_error(s, "send", "worker");
+                }
         }
         MPI_Finalize();
         exit(0);
