@@ -1,6 +1,7 @@
 from distutils.core import setup, Extension
 import os
 
+os.environ['CXX'] = 'mpicxx'
 radia = Extension(
     'radia',
     define_macros=[('MAJOR_VERSION', '1'), ('MINOR_VERSION', '0')],

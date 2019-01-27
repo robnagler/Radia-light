@@ -9,7 +9,7 @@
 * Author(s):      Oleg Chubar
 *
 * First release:  1997
-* 
+*
 * Copyright (C):  1997 by European Synchrotron Radiation Facility, France
 *                 All Rights Reserved
 *
@@ -41,8 +41,8 @@ typedef list <radTPair_int_hg*, allocator<radTPair_int_hg*> > radTlphgPtr;
 
 struct radTRelaxStatusParam {
 	double MisfitM, MaxModM, MaxModH;
-	radTRelaxStatusParam(double InMisfitM =0., double InMaxModM =0., double InMaxModH =0.) 
-	{ 
+	radTRelaxStatusParam(double InMisfitM =0., double InMaxModM =0., double InMaxModH =0.)
+	{
 		MisfitM=InMisfitM; MaxModM=InMaxModM; MaxModH=InMaxModH;
 	}
 };
@@ -73,8 +73,8 @@ inline int operator <(const radTRelaxSubInterval&, const radTRelaxSubInterval&) 
 
 //-------------------------------------------------------------------------
 
-inline int operator ==(const radTRelaxSubInterval& i1, const radTRelaxSubInterval& i2) 
-{ 
+inline int operator ==(const radTRelaxSubInterval& i1, const radTRelaxSubInterval& i2)
+{
 	return (i1.StartNo == i2.StartNo) && (i1.FinNo == i2.FinNo) && (i1.SubIntervalID == i2.SubIntervalID);
 }
 
@@ -160,7 +160,7 @@ class radTInteraction : public radTg {
 	TVector3d* AuxOldMagnArray;
 	TVector3d* AuxOldFieldArray;
 
-	radTRelaxSubInterval* RelaxSubIntervArray; // New 
+	radTRelaxSubInterval* RelaxSubIntervArray; // New
 	radTVectPtrg3dRelax g3dRelaxPtrVect;
 	radTVectPtr_g3d g3dExternPtrVect;
 	radTVectPtrTrans TransPtrVect;
@@ -192,6 +192,9 @@ public:
 	void CountMainRelaxElems(radTg3d*, radTlphgPtr*);
 	void AllocateMemory(char ExtraExternFieldArrayIsNeeded);
 	void SetupInteractMatrix();
+        void SetupInteractMatrixColumn(int ColNo, int AmOfElemWithSym, double *res);
+        void SetupInteractMatrixCollector(int AmOfElemWithSym, int resSize, double *res);
+        void SetupInteractMatrixWorker(int AmOfElemWithSym, int resSize, double *res);
 	void SetupExternFieldArray();
 	void AddExternFieldFromMoreExtSource();
 	void AddMoreExternField(const radThg& hExtraExtSrc);
@@ -257,7 +260,7 @@ public:
 
 inline void radTInteraction::PushFrontNativeElemTransList(radTg3d* g3dPtr, radTlphgPtr* ListOfPtrToTransPtr)
 {
-	for(radTlphg::iterator TrIter = g3dPtr->g3dListOfTransform.begin();	
+	for(radTlphg::iterator TrIter = g3dPtr->g3dListOfTransform.begin();
 		TrIter != g3dPtr->g3dListOfTransform.end(); ++TrIter)
 		ListOfPtrToTransPtr->push_back(&(*TrIter)); // Improve dereferentiation?
 }
@@ -266,14 +269,14 @@ inline void radTInteraction::PushFrontNativeElemTransList(radTg3d* g3dPtr, radTl
 
 inline void radTInteraction::EmptyVectOfPtrToListsOfTrans()
 {
-	for(unsigned i=1; i<IntVectOfPtrToListsOfTransPtr.size(); i++) 
+	for(unsigned i=1; i<IntVectOfPtrToListsOfTransPtr.size(); i++)
 	{
 		radTlphgPtr*& p_lphgPtr = IntVectOfPtrToListsOfTransPtr[i];
 		if(p_lphgPtr != 0) delete p_lphgPtr;
 		p_lphgPtr = 0;
 	}
 	IntVectOfPtrToListsOfTransPtr.erase(IntVectOfPtrToListsOfTransPtr.begin(), IntVectOfPtrToListsOfTransPtr.end());
-	for(unsigned k=1; k<ExtVectOfPtrToListsOfTransPtr.size(); k++) 
+	for(unsigned k=1; k<ExtVectOfPtrToListsOfTransPtr.size(); k++)
 	{
 		radTlphgPtr*& p_lphgPtr = ExtVectOfPtrToListsOfTransPtr[k];
 		if(p_lphgPtr != 0) delete p_lphgPtr;
@@ -311,7 +314,7 @@ inline void radTInteraction::AddTransOrNestedFor(radTrans* BaseTransPtr, const r
 	if(I_or_E == 'I') PtrToListOfPtrToTrans = IntVectOfPtrToListsOfTransPtr[ElemLocInd];
 	else PtrToListOfPtrToTrans = ExtVectOfPtrToListsOfTransPtr[ElemLocInd];
 
-	if(Iter == PtrToListOfPtrToTrans->end()) 
+	if(Iter == PtrToListOfPtrToTrans->end())
 	{
 		if(Cast.IdentTransCast(BaseTransPtr) == 0) TransPtrVect.push_back(new radTrans(*BaseTransPtr));
 		else TransPtrVect.push_back(BaseTransPtr);
@@ -330,7 +333,7 @@ inline void radTInteraction::DestroyMainTransPtrArray()
 		radTrans* MainTransPtr = MainTransPtrArray[i];
 		if(MainTransPtr != 0)
 		{
-			if(Cast.IdentTransCast(MainTransPtr)==0) 
+			if(Cast.IdentTransCast(MainTransPtr)==0)
 			{
 				delete (MainTransPtr);
 				MainTransPtr = 0;
@@ -398,7 +401,7 @@ inline void radTInteraction::InitAuxArrays()
 inline void radTInteraction::StoreAuxOldArrays()
 {
 	if(AmOfMainElem <= 0) return;
-	
+
 	if((AuxOldMagnArray != NULL) && (AuxOldFieldArray != NULL))
 	{
         TVector3d *tAuxOldMagn = AuxOldMagnArray;
@@ -407,7 +410,7 @@ inline void radTInteraction::StoreAuxOldArrays()
 
         for(int StNo=0; StNo<AmOfMainElem; StNo++)
 		{
-			TVector3d &M = (g3dRelaxPtrVect[StNo])->Magn; 
+			TVector3d &M = (g3dRelaxPtrVect[StNo])->Magn;
 			*(tAuxOldMagn++) = M;
 			*(tAuxOldField++) = *(tNewFieldArray++);
 		}
@@ -419,7 +422,7 @@ inline void radTInteraction::StoreAuxOldArrays()
 			TVector3d *tAuxOldMagn = AuxOldMagnArray;
 			for(int StNo=0; StNo<AmOfMainElem; StNo++)
 			{
-				TVector3d &M = (g3dRelaxPtrVect[StNo])->Magn; 
+				TVector3d &M = (g3dRelaxPtrVect[StNo])->Magn;
 				*(tAuxOldMagn++) = M;
 			}
 		}
@@ -480,7 +483,7 @@ inline void radTInteraction::RestoreAuxOldArrays() //OC300504
 inline void radTInteraction::ShowInteractVector(char Ch)
 {
 	TVector3d* Vect3dPtr = NULL;
-	switch(Ch) 
+	switch(Ch)
 	{
 		case 'E':
 			Vect3dPtr = ExternFieldArray; break;

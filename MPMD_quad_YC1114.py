@@ -184,9 +184,9 @@ full=rad.ObjCnt([yoke,coil])
 
 t0 = time.time()
 res = rad.Solve(full, 0.0001, 10000)
-mpi = mpi4py.MPI.COMM_WORLD
-if mpi.Get_rank() != 0:
-    sys.exit()
+# No workers should exit rad.Solve
+assert mpi4py.MPI.COMM_WORLD.Get_rank() == 0
+
 
 #print('Solved for Magnetizations in', round(time.time() - t0, 2), 's')
 expect = [9.991124106723865e-05, 1.7586937018625115, 0.009296872940670615, 744.0]

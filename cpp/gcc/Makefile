@@ -28,8 +28,8 @@ ML_INCLUDE=	-I$(ML_ORIG_DIR) -I$(RAD_SRC_ML_DIR)
 #MLLIBDIR=	$(ML_ORIG_DIR)
 #MLMPREP=	$(ML_ORIG_DIR)/mprep
 
-CC  = g++
-CXX = c++
+CC  = mpicxx
+CXX = mpicxx
 
 #RAD_SRC_DEF=	-D__GCC__ -D__MATHEMATICA__ -DFFTW_ENABLE_FLOAT -DNO_TIMER -DANSI_DECLARATORS -DTRILIBRARY -DLINUX -D_GM_WITHOUT_BASE -DMLINTERFACE=4
 RAD_SRC_DEF=	-D__GCC__ -DFFTW_ENABLE_FLOAT -DNO_TIMER -DANSI_DECLARATORS -DTRILIBRARY -DLINUX -D_GM_WITHOUT_BASE
@@ -53,7 +53,7 @@ PRG_LIB=		libradia.a
 lib:	$(OBJ_LIB)
 	ar -cvq $(PRG_LIB) *.o
 	#cp $(PRG_LIB) $(LIB_DIR)/
-	rm -f *.o
+#	rm -f *.o
 
 %.o: $(RAD_SRC_LIB_DIR)/%.cpp
 	$(CC) $(LIBCFLAGS) -c $<
@@ -62,7 +62,7 @@ lib:	$(OBJ_LIB)
 	$(CC) $(LIBCFLAGS) -c $<
 
 triangle.o:	$(RAD_SRC_TRI_DIR)/triangle.c
-		cc $(LIBCFLAGS) -c $(RAD_SRC_TRI_DIR)/triangle.c -O $(RAD_SRC_DEF) -I$(RAD_SRC_TRI_DIR)
+		mpicc $(LIBCFLAGS) -c $(RAD_SRC_TRI_DIR)/triangle.c -O $(RAD_SRC_DEF) -I$(RAD_SRC_TRI_DIR)
 
 %.o: $(SH_SRC_PARSE_DIR)/%.cpp
 	$(CC) $(LIBCFLAGS) -c $<

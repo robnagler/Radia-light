@@ -52,7 +52,7 @@ pylib:
 	cd $(py_dir); make python
 
 clean:
-	rm -f $(ext_dir)/libfftw.a $(gcc_dir)/libradia.a $(gcc_dir)/radia*.so; \
+	rm -f $(ext_dir)/libfftw.a $(gcc_dir)/*.{a,so,o}; \
 	rm -rf $(ext_dir)/$(fftw_dir)/py/build/;
 	if [ -d $(root_dir)/.git ]; then rm -f $(examples_dir)/radia*.so && (git checkout $(examples_dir)/radia*.so 2>/dev/null || :); fi;
 
