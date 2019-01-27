@@ -485,7 +485,7 @@ void radTInteraction::SetupInteractMatrixCollector(int AmOfElemWithSym, int resS
                 _error("collector: world_size=%d expecting at least 2\n", world_size);
                 MPI_Abort(MPI_COMM_WORLD, 9);
         }
-        _error("collector: world_size=%d resSize=%d\n", world_size, resSize);
+        _error("collector: world_size=%d AmOfElemWithSym=%d resSize=%d\n", world_size, AmOfElemWithSym, resSize);
         int ColNo = 0;
         while (1) {
                 MPI_Status status;
@@ -532,8 +532,7 @@ void radTInteraction::SetupInteractMatrixCollector(int AmOfElemWithSym, int resS
                         int c = ColNo + status.MPI_SOURCE - 1;
                         _debug("collector: recv worker=%d c=%d\n", status.MPI_SOURCE, c);
                         double *r = res;
-                        for(int StrNo=0; StrNo<AmOfMainElem; StrNo++)
-                        {
+                        for(int StrNo=0; StrNo<AmOfMainElem; StrNo++) {
                                 InteractMatrix[StrNo][c].Str0.x = *r++;
                                 InteractMatrix[StrNo][c].Str0.y = *r++;
                                 InteractMatrix[StrNo][c].Str0.z = *r++;
@@ -610,17 +609,34 @@ void radTInteraction::SetupInteractMatrixWorker(int AmOfElemWithSym, int resSize
 
 void radTInteraction::SetupInteractMatrixColumn(int ColNo, int AmOfElemWithSym, double *res)
 {
+        if (ColNo == 905) { _debug("0000000000 res=%x\n", res); }
         radTFieldKey FieldKeyInteract; FieldKeyInteract.B_=FieldKeyInteract.H_=FieldKeyInteract.PreRelax_=1;
         TVector3d ZeroVect(0.,0.,0.);
+        if (ColNo == 905) { _debug("bbbbbbbbbbbbbbb\n"); }
 
-        FillInTransPtrVectForElem(ColNo, 'I');
+	radTlphgPtr* PtrToListOfPtrToTrans = NULL;
+        if (ColNo == 905) { _debug("rrrrrrrrrrrrr\n"); }
+	PtrToListOfPtrToTrans = IntVectOfPtrToListsOfTransPtr[ColNo];
+        if (ColNo == 905) { _debug("qqqqqqqqq\n"); }
+	if (PtrToListOfPtrToTrans->empty()) {
+                if (ColNo == 905) { _debug("wwwwwwwwwwwww\n"); }
+                TransPtrVect.push_back(IdentTransPtr);
+        }
+	else {
+                if (ColNo == 905) { _debug("yyyyyyyyyyyyyyyyy\n"); }
+                NestedFor_Trans(IdentTransPtr, PtrToListOfPtrToTrans->begin(), ColNo, 'I');
+        }
+        if (ColNo == 905) { _debug("cccccccccccccccccc\n"); }
         radTg3dRelax* g3dRelaxPtrColNo = g3dRelaxPtrVect[ColNo];
-
+        if (ColNo == 905) { _debug("dddddddddddddddd\n"); }
         for(int StrNo=0; StrNo<AmOfMainElem; StrNo++)
         {
+                if (ColNo == 905) { _debug("eeeeeeeeeeeeee %d\n", StrNo); }
                 TVector3d InitObsPoiVect = MainTransPtrArray[StrNo]->TrPoint((g3dRelaxPtrVect[StrNo])->ReturnCentrPoint());
 
+                if (ColNo == 905) { _debug("ffffffffffffffff  %d\n", StrNo); }
                 TMatrix3d SubMatrix(ZeroVect, ZeroVect, ZeroVect), BufSubMatrix;
+                if (ColNo == 905) { _debug("aaaaaaaaaaaa %d\n", StrNo); }
                 for(unsigned i=0; i<TransPtrVect.size(); i++)
                 {
                         TVector3d ObsPoiVect = TransPtrVect[i]->TrPoint_inv(InitObsPoiVect);
@@ -638,6 +654,7 @@ void radTInteraction::SetupInteractMatrixColumn(int ColNo, int AmOfElemWithSym, 
                         TransPtrVect[i]->TrMatrix(BufSubMatrix);
                         SubMatrix += BufSubMatrix;
                 }
+                if (ColNo == 905) { _debug("zzzzzzzzzzzzzz %d\n", StrNo); }
                 // local op that matrix multiplies inverse with constant
                 MainTransPtrArray[StrNo]->TrMatrix_inv(SubMatrix);
                 *res++ = SubMatrix.Str0.x;
