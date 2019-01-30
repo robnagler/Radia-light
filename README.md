@@ -36,8 +36,18 @@ ln -s $PWD/cpp/gcc/radia.so $x
 
 To run the test with MPI with one worker (and one collector):
 
-```
+```sh
 mpiexec -n 2 python MPMD_quad_YC1114.py
 ```
 
 This should be approximately equivalent to serial run of ochubar/Radia.
+
+To time a sequence of MPI node configurations:
+
+```sh
+export TIMEFORMAT=%0R,%0U,%0S
+for i in 20 15 10 8 6 5 4 3 2; do
+    echo -n $i,
+    time mpiexec -n $i python MPMD_quad_YC1114.py
+done
+```
